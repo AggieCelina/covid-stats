@@ -35,7 +35,7 @@ def showDataForCountryDataset(countryDataForCaseType, xTest, yTestExp, yTestQuad
     for i in range(len(cases)):
         cases[i] = int(cases[i])
     
-    f, ax = plt.subplots(figsize=(12, 6))
+    f, ax = plt.subplots(figsize=(14, 6))
     plt.plot(xTest, yTestExp, color='r')
     plt.plot(xTest, yTestQuad, color='g')
     plt.scatter(dataPlotIndices, cases)
@@ -46,8 +46,7 @@ def showDataForCountryDataset(countryDataForCaseType, xTest, yTestExp, yTestQuad
     ax.title.set_text(POLAND)
     ax.tick_params(axis='both', labelsize=7)
     ax.grid(color='gray', linestyle='-', linewidth=0.3)
-    plt.show()
-    ax.figure.savefig('./docs/test.pdf')
+    ax.figure.savefig('./docs/poland.png')
 
 def fitModels(countryDataForCaseType, initIndex, finalIndex, splitIndex):
     data = getDatesAndValuesForCountryDataForCaseType(
