@@ -47,7 +47,7 @@ def showDataForCountryDataset(countryDataForCaseType, xTest, yTestExp, yTestQuad
     ax.tick_params(axis='both', labelsize=7)
     ax.grid(color='gray', linestyle='-', linewidth=0.3)
     plt.show()
-    ax.figure.savefig('test.pdf')
+    ax.figure.savefig('./docs/test.pdf')
 
 def fitModels(countryDataForCaseType, initIndex, finalIndex, splitIndex):
     data = getDatesAndValuesForCountryDataForCaseType(
@@ -86,12 +86,8 @@ confirmedPolandDataForConfirmed = selectCountryDataForCaseType(
 (time, cases, dataPlotIndices) = getDatesAndValuesForCountryDataForCaseType(
     confirmedPolandDataForConfirmed)
 
-allSet = zip(time, dataPlotIndices, cases)
-
-print(confirmedPolandDataForConfirmed)
-
 def timeToPlotIndex(timeStamp):
-    return sum([x[1] if(x[0] == timeStamp) else 0 for x in allSet])
+    return sum([x[1] if(x[0] == timeStamp) else 0 for x in zip(time, dataPlotIndices, cases)])
 
 showDataForCountryDataset(confirmedPolandDataForConfirmed,
                           *fitModels(confirmedPolandDataForConfirmed, timeToPlotIndex(INIT_DATE),
