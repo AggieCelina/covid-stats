@@ -5,11 +5,14 @@ import numpy as np
 from scipy.optimize import least_squares
 
 CONFIRMED_CASES = 'CSSEGI-stats/COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv'
+POL_IMG_PATH = './docs/poland.png'
 POLAND = 'Poland'
 COUNTRY = 'Country/Region'
 INIT_DATE = '3/8/20'
 SPLIT_DATE = '3/17/20'
-FINAL_DATE = '3/22/20'
+CORR_DATE_POL_1 = '3/23/20'
+CORR_DATE_POL_2 = '3/18/20'
+PREDICTION_TERM = 5
 
 def convertToDateFormat(s):
     return datetime.strptime(s, '%m/%d/%y').date()
@@ -21,12 +24,22 @@ def selectCountryDataForCaseType(country, caseType):
     return caseType.loc[caseType[COUNTRY] == country]
     
 def getDatesAndValuesForCountryDataForCaseType(countryDataForCaseType):
-
     countryDataForCaseType = countryDataForCaseType.T
+
+    #######  Hack to fix faulty source data for Poland only
+    for i in range(0, len(countryDataForCaseType.index)):
+        if countryDataForCaseType.index[i] == COUNTRY and countryDataForCaseType.values[i] == POLAND:
+            for i in range(0, len(countryDataForCaseType.index)):
+                if countryDataForCaseType.index[i] == CORR_DATE_POL_1:
+                    countryDataForCaseType.values[i] = [740]
+                if countryDataForCaseType.index[i] == CORR_DATE_POL_2:
+                    countryDataForCaseType.values[i] = [281]
+    #######################################################
+
     countryDataForCaseType = countryDataForCaseType.drop(
     countryDataForCaseType.index[0:47])
     dataPlotIndices = range(0, len(countryDataForCaseType))
-    
+
     return list(countryDataForCaseType.index.values), list(countryDataForCaseType.values), dataPlotIndices
 
 def showDataForCountryDataset(countryDataForCaseType, xTest, yTestExp, yTestQuad):
@@ -34,28 +47,24 @@ def showDataForCountryDataset(countryDataForCaseType, xTest, yTestExp, yTestQuad
         countryDataForCaseType)
     for i in range(len(cases)):
         cases[i] = int(cases[i])
-    
     f, ax = plt.subplots(figsize=(14, 6))
+    plt.scatter(dataPlotIndices, cases)
     plt.plot(xTest, yTestExp, color='r')
     plt.plot(xTest, yTestQuad, color='g')
-    plt.scatter(dataPlotIndices, cases)
     plt.axvline(timeToPlotIndex(SPLIT_DATE), color='gray', linewidth=1.5, linestyle="--")
     plt.xticks(np.arange(len(time)), time)
     for label in ax.xaxis.get_ticklabels()[::2]:
         label.set_visible(False)
     ax.title.set_text(POLAND)
-    ax.tick_params(axis='both', labelsize=7)
+    ax.tick_params(axis='both', labelsize=9)
     ax.grid(color='gray', linestyle='-', linewidth=0.3)
-    ax.figure.savefig('./docs/poland.png')
+    ax.figure.savefig(POL_IMG_PATH)
 
 def fitModels(countryDataForCaseType, initIndex, finalIndex, splitIndex):
     data = getDatesAndValuesForCountryDataForCaseType(
         countryDataForCaseType)
-    
     dataPoints = list(map(lambda x: x[0], data[1]))
-
     yTrain = np.asarray(dataPoints[initIndex:splitIndex + 1])
-
     xTrain = np.asarray(range(initIndex, splitIndex + 1))
     xTest = np.asarray(range(initIndex, finalIndex + 1))
 
@@ -90,5 +99,5 @@ def timeToPlotIndex(timeStamp):
 
 showDataForCountryDataset(confirmedPolandDataForConfirmed,
                           *fitModels(confirmedPolandDataForConfirmed, timeToPlotIndex(INIT_DATE),
-                           timeToPlotIndex(FINAL_DATE),
+                           len(cases) + PREDICTION_TERM,
                             timeToPlotIndex(SPLIT_DATE)))
