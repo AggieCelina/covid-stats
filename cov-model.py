@@ -10,9 +10,10 @@ POLAND = 'Poland'
 COUNTRY = 'Country/Region'
 INIT_DATE = '3/8/20'
 SPLIT_DATE = '3/17/20'
+FINAL_DATE = '3/23/20'
 CORR_DATE_POL_1 = '3/23/20'
 CORR_DATE_POL_2 = '3/18/20'
-PREDICTION_TERM = 5
+PREDICTION_TERM = 2
 
 def convertToDateFormat(s):
     return datetime.strptime(s, '%m/%d/%y').date()
@@ -42,16 +43,18 @@ def getDatesAndValuesForCountryDataForCaseType(countryDataForCaseType):
 
     return list(countryDataForCaseType.index.values), list(countryDataForCaseType.values), dataPlotIndices
 
-def showDataForCountryDataset(countryDataForCaseType, xTest, yTestExp, yTestQuad):
+def showDataForCountryDataset(countryDataForCaseType, xTestE, xTestQ, yTestExp, yTestQuad):
     (time, cases, dataPlotIndices) = getDatesAndValuesForCountryDataForCaseType(
         countryDataForCaseType)
     for i in range(len(cases)):
         cases[i] = int(cases[i])
     f, ax = plt.subplots(figsize=(14, 6))
     plt.scatter(dataPlotIndices, cases)
-    plt.plot(xTest, yTestExp, color='r')
-    plt.plot(xTest, yTestQuad, color='g')
+    plt.plot(xTestE, yTestExp, color='r')
+    plt.plot(xTestQ, yTestQuad, color='g')
     plt.axvline(timeToPlotIndex(SPLIT_DATE), color='gray', linewidth=1.5, linestyle="--")
+    plt.axvline(timeToPlotIndex(FINAL_DATE), color='gray',
+                linewidth=1.5, linestyle="--")
     plt.xticks(np.arange(len(time)), time)
     for label in ax.xaxis.get_ticklabels()[::2]:
         label.set_visible(False)
@@ -64,9 +67,14 @@ def fitModels(countryDataForCaseType, initIndex, finalIndex, splitIndex):
     data = getDatesAndValuesForCountryDataForCaseType(
         countryDataForCaseType)
     dataPoints = list(map(lambda x: x[0], data[1]))
-    yTrain = np.asarray(dataPoints[initIndex:splitIndex + 1])
-    xTrain = np.asarray(range(initIndex, splitIndex + 1))
-    xTest = np.asarray(range(initIndex, finalIndex + 1))
+    yTrainExp = np.asarray(dataPoints[initIndex:splitIndex + 1])
+    xTrainExp = np.asarray(range(initIndex, splitIndex + 1))
+    xTestExp = np.asarray(range(initIndex, finalIndex + 1))
+
+    yTrainQuad = np.asarray(dataPoints[splitIndex:timeToPlotIndex(FINAL_DATE) + 1])
+    xTrainQuad = np.asarray(range(splitIndex, timeToPlotIndex(FINAL_DATE) + 1))
+    xTestQuad = np.asarray(range(splitIndex, finalIndex + 1))
+
 
     def expFunMin(params, X, Y):
         return params[0] + params[1] * np.exp(params[2] * X) - Y
@@ -80,13 +88,13 @@ def fitModels(countryDataForCaseType, initIndex, finalIndex, splitIndex):
     def quadFun(params, X):
         return params[0] + params[1] * X + params[2] * X**2
 
-    expOpt = least_squares(expFunMin, np.zeros(3), args=(xTrain, yTrain))
-    quadOpt = least_squares(quadFunMin, np.zeros(3), args=(xTrain, yTrain))
+    expOpt = least_squares(expFunMin, np.zeros(3), args=(xTrainExp, yTrainExp))
+    quadOpt = least_squares(quadFunMin, np.zeros(3), args=(xTrainQuad, yTrainQuad))
 
-    yTestExp = expFun(expOpt.x, xTest)
-    yTestQuad = quadFun(quadOpt.x, xTest)
+    yTestExp = expFun(expOpt.x, xTestExp)
+    yTestQuad = quadFun(quadOpt.x, xTestQuad)
 
-    return xTest, yTestExp, yTestQuad
+    return xTestExp, xTestQuad, yTestExp, yTestQuad
 
 confirmedPolandDataForConfirmed = selectCountryDataForCaseType(
     POLAND, importDataOfCaseType(CONFIRMED_CASES))
