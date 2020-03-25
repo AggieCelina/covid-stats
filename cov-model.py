@@ -4,7 +4,7 @@ from datetime import datetime
 import numpy as np
 from scipy.optimize import least_squares
 
-CONFIRMED_CASES = 'CSSEGI-stats/COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_19-covid-Confirmed.csv'
+CONFIRMED_CASES = 'CSSEGI-stats/COVID-19/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv'
 POL_IMG_PATH = './docs/poland.png'
 POLAND = 'Poland'
 COUNTRY = 'Country/Region'
